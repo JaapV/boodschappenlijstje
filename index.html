@@ -3,29 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Boodschappen Jaap & Ilse</title>
+    <title>Boodschappenlijst Jaap en Ilse</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: #1c1e21; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #1c1e21; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
-        h2 { border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 1.1rem; margin-top: 20px; color: #4b4b4b; }
-        .vinklijst { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .vink-item { background: #f8f9fa; padding: 10px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
-        .controls { display: flex; align-items: center; gap: 12px; }
-        .btn-qty { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #ddd; background: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
-        .qty-val { font-weight: bold; min-width: 20px; text-align: center; color: #007bff; }
-        button { width: 100%; padding: 14px; margin-top: 8px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        h2 { border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 1.2rem; margin-top: 25px; }
+        .vinklijst { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .vink-item { background: #f8f9fa; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .controls { display: flex; align-items: center; gap: 15px; }
+        .btn-qty { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #ddd; background: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .qty-val { font-weight: bold; min-width: 20px; text-align: center; }
+        button { width: 100%; padding: 14px; margin-top: 8px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; }
         .btn-add { background: #007bff; color: white; }
         .btn-sort { background: #6c757d; color: white; margin-top: 20px; }
-        .btn-reset { background: #dc3545; color: white; opacity: 0.8; margin-top: 10px; }
+        .btn-reset { background: #dc3545; color: white; opacity: 0.8; }
         input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; margin-top: 10px; font-size: 1rem; }
         ul { list-style: none; padding: 0; margin-top: 15px; }
-        li { padding: 12px; border-bottom: 1px solid #f0f2f5; display: flex; align-items: center; justify-content: space-between; }
+        li { padding: 12px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; }
         .item-main { display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer; }
         .done { text-decoration: line-through; opacity: 0.4; }
-        .aantal-badge { background: #e7f1ff; color: #007bff; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; }
-        .cat-badge { font-size: 0.7rem; background: #f0f0f0; padding: 3px 8px; border-radius: 15px; color: #777; font-weight: bold; margin-left: auto; margin-right: 10px; }
+        .aantal-badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; }
+        .cat-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 10px; border-radius: 20px; color: #495057; font-weight: bold; margin-right: 10px; }
         .btn-del { color: #ccc; padding: 5px 10px; font-size: 1.1rem; cursor: pointer; }
         #status-box { background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 15px; font-size: 0.9rem; border: 1px solid #ffeeba; }
     </style>
@@ -34,11 +35,12 @@
 
 <div class="container">
     <div id="status-box">Producten laden uit Google Sheets...</div>
-    <h2>Wat hebben we nodig?</h2>
+    <h2>Producten kiezen</h2>
     <div id="vinklijst-container" class="vinklijst"></div>
-    <button class="btn-add" onclick="voegGeselecteerdeToe()">Zet op de lijst</button>
-    <input type="text" id="handmatig-input" placeholder="Iets anders...">
-    <button class="btn-add" style="background: #28a745;" onclick="voegHandmatigToe()">Snel toevoegen</button>
+    <button class="btn-add" onclick="voegGeselecteerdeToe()">Voeg toe aan lijst</button>
+    <hr style="margin-top: 25px; border: 0; border-top: 1px solid #eee;">
+    <input type="text" id="handmatig-input" placeholder="Ander product...">
+    <button class="btn-add" style="background: #28a745;" onclick="voegHandmatigToe()">Handmatig toevoegen</button>
     <h2>Onze Boodschappenlijst</h2>
     <ul id="boodschappenlijst"></ul>
     <button class="btn-sort" onclick="sorteerLijst()">Sorteer op looproute</button>
@@ -47,13 +49,13 @@
 
 <script>
     const firebaseConfig = {
-        apiKey: "AIzaSyCVT75f1r5oj2oQt_p8qPhFncQ4sF1Gl4I",
-        authDomain: "boodschappen-website.firebaseapp.com",
-        databaseURL: "https://boodschappen-website-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "boodschappen-website",
-        storageBucket: "boodschappen-website.firebasestorage.app",
-        messagingSenderId: "524178632267",
-        appId: "1:524178632267:web:9ab9b7bcd72766ffc827ce"
+      apiKey: "AIzaSyCVT75f1r5oj2oQt_p8qPhFncQ4sF1Gl4I",
+      authDomain: "boodschappen-website.firebaseapp.com",
+      databaseURL: "https://boodschappen-website-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "boodschappen-website",
+      storageBucket: "boodschappen-website.firebasestorage.app",
+      messagingSenderId: "524178632267",
+      appId: "1:524178632267:web:9ab9b7bcd72766ffc827ce"
     };
 
     const SPREADSHEET_ID = '1e9EiFl4qvpOmyrUcmbSVX_5q2A2i1LUxJkpBvGDtZgc';
@@ -68,32 +70,39 @@
 
     async function laadData() {
         const statusBox = document.getElementById('status-box');
-        // We gebruiken de Visualization API die CORS-vriendelijk is
-        const urlP = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Producten`;
-        const urlC = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Categorien`;
+        
+        // We gebruiken de 'pub?output=csv' methode, deze is het meest betrouwbaar tegen "Failed to fetch" errors.
+        const urlP = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/pub?output=csv&sheet=Producten`;
+        const urlC = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/pub?output=csv&sheet=Categorien`;
 
         try {
-            const [resP, resC] = await Promise.all([fetch(urlP), fetch(urlC)]);
+            const [resP, resC] = await Promise.all([
+                fetch(urlP, { cache: "no-store" }), 
+                fetch(urlC, { cache: "no-store" })
+            ]);
+            
+            if (!resP.ok || !resC.ok) throw new Error("Google Sheets weigert toegang.");
+
             const textP = await resP.text();
             const textC = await resC.text();
 
-            tabelProducten = parseGvizCSV(textP);
-            tabelCategorien = parseGvizCSV(textC);
+            tabelProducten = parseCSV(textP);
+            tabelCategorien = parseCSV(textC);
 
-            tabelProducten.forEach(p => selectieStatus[p.product] = 0);
+            tabelProducten.forEach(p => { if(p.product) selectieStatus[p.product] = 0; });
             tekenVinklijst();
             statusBox.style.display = 'none';
         } catch (e) {
-            statusBox.innerHTML = "⚠️ Kan Google Sheets niet bereiken. Controleer internet en Sheet-rechten.";
+            statusBox.innerHTML = "⚠️ Verbinding mislukt. Staat de Sheet op 'Iedereen met de link'?";
             statusBox.style.background = "#f8d7da";
         }
     }
 
-    function parseGvizCSV(csv) {
-        const rows = csv.split('\n').filter(r => r.trim() !== "");
-        const headers = rows[0].replace(/"/g, '').split(',').map(h => h.trim().toLowerCase());
+    function parseCSV(csv) {
+        const rows = csv.split(/\r?\n/).filter(r => r.trim() !== "");
+        const headers = rows[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
         return rows.slice(1).map(row => {
-            const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
+            const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.trim().replace(/"/g, ''));
             let obj = {};
             headers.forEach((h, i) => obj[h] = values[i] || "");
             return obj;
