@@ -28,13 +28,13 @@
         .aantal-badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; }
         .cat-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 10px; border-radius: 20px; color: #495057; font-weight: bold; margin-right: 10px; }
         .btn-del { color: #ccc; padding: 5px 10px; font-size: 1.1rem; cursor: pointer; }
-        #status-box { background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 15px; font-size: 0.9rem; border: 1px solid #ffeeba; }
+        #status-box { background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 15px; font-size: 0.9rem; border: 1px solid #ffeeba; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="status-box">Producten laden uit Google Sheets...</div>
+    <div id="status-box">Verbinding maken met Google Sheets...</div>
     <h2>Producten kiezen</h2>
     <div id="vinklijst-container" class="vinklijst"></div>
     <button class="btn-add" onclick="voegGeselecteerdeToe()">Voeg toe aan lijst</button>
@@ -71,32 +71,39 @@
     async function laadData() {
         const statusBox = document.getElementById('status-box');
         
-        // Gebruik de Google Visualization URL voor maximale compatibiliteit
+        // We proberen eerst het Producten tabblad
         const urlP = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Producten`;
         const urlC = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Categorien`;
 
         try {
-            const [resP, resC] = await Promise.all([fetch(urlP), fetch(urlC)]);
-            
-            if (!resP.ok || !resC.ok) throw new Error();
-
+            statusBox.innerText = "Bezig met ophalen van Producten...";
+            const resP = await fetch(urlP);
+            if (!resP.ok) throw new Error(`Producten-sheet niet bereikbaar (Status: ${resP.status})`);
             const textP = await resP.text();
+
+            statusBox.innerText = "Bezig met ophalen van Categorien...";
+            const resC = await fetch(urlC);
+            if (!resC.ok) throw new Error(`Categorien-sheet niet bereikbaar (Status: ${resC.status})`);
             const textC = await resC.text();
 
             tabelProducten = parseCSV(textP);
             tabelCategorien = parseCSV(textC);
 
+            if (tabelProducten.length === 0) throw new Error("De sheet 'Producten' lijkt leeg.");
+
             tabelProducten.forEach(p => { if(p.product) selectieStatus[p.product] = 0; });
             tekenVinklijst();
             statusBox.style.display = 'none';
         } catch (e) {
-            statusBox.innerHTML = "⚠️ Verbinding mislukt. Staat de Sheet op 'Iedereen met de link'?";
+            statusBox.innerHTML = `⚠️ Fout: ${e.message}\n\nOplossing: Controleer of tabbladnamen exact 'Producten' en 'Categorien' zijn en of Delen op 'Iedereen met de link' staat.`;
             statusBox.style.background = "#f8d7da";
+            console.error(e);
         }
     }
 
     function parseCSV(csv) {
         const rows = csv.split(/\r?\n/).filter(r => r.trim() !== "");
+        if (rows.length === 0) return [];
         const headers = rows[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
         return rows.slice(1).map(row => {
             const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.trim().replace(/"/g, ''));
