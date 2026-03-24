@@ -70,19 +70,24 @@
 
     async function laadData() {
         const statusBox = document.getElementById('status-box');
-        
-        // We proberen eerst het Producten tabblad
         const urlP = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Producten`;
         const urlC = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Categorien`;
 
+        // Opties om browser-blokkades te minimaliseren
+        const fetchOptions = {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'omit'
+        };
+
         try {
             statusBox.innerText = "Bezig met ophalen van Producten...";
-            const resP = await fetch(urlP);
+            const resP = await fetch(urlP, fetchOptions);
             if (!resP.ok) throw new Error(`Producten-sheet niet bereikbaar (Status: ${resP.status})`);
             const textP = await resP.text();
 
             statusBox.innerText = "Bezig met ophalen van Categorien...";
-            const resC = await fetch(urlC);
+            const resC = await fetch(urlC, fetchOptions);
             if (!resC.ok) throw new Error(`Categorien-sheet niet bereikbaar (Status: ${resC.status})`);
             const textC = await resC.text();
 
@@ -97,7 +102,6 @@
         } catch (e) {
             statusBox.innerHTML = `⚠️ Fout: ${e.message}\n\nOplossing: Controleer of tabbladnamen exact 'Producten' en 'Categorien' zijn en of Delen op 'Iedereen met de link' staat.`;
             statusBox.style.background = "#f8d7da";
-            console.error(e);
         }
     }
 
