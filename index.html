@@ -12,28 +12,29 @@
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
         h2 { border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 1.2rem; margin-top: 25px; }
         
-        /* Product Kiezer */
         .vinklijst { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
         .vink-item { background: #f8f9fa; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
         .controls { display: flex; align-items: center; gap: 15px; }
         .btn-qty { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #ddd; background: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
         .qty-val { font-weight: bold; min-width: 20px; text-align: center; }
 
-        /* Knoppen */
         button { width: 100%; padding: 14px; margin-top: 8px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; }
         .btn-add { background: #007bff; color: white; }
         .btn-sort { background: #6c757d; color: white; margin-top: 20px; }
         .btn-reset { background: #dc3545; color: white; opacity: 0.8; }
         input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; margin-top: 10px; font-size: 1rem; }
 
-        /* Lijst weergave */
         ul { list-style: none; padding: 0; margin-top: 15px; }
         li { padding: 12px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; }
-        .item-info { display: flex; align-items: center; gap: 10px; }
+        .item-info { display: flex; align-items: center; gap: 10px; flex: 1; }
         .aantal-badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; }
-        .cat-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 10px; border-radius: 20px; color: #495057; font-weight: bold; }
+        .cat-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 10px; border-radius: 20px; color: #495057; font-weight: bold; margin-right: 10px; }
+        
+        /* Verwijderknop styling */
+        .btn-del { color: #ccc; font-weight: bold; padding: 5px 10px; cursor: pointer; font-size: 1.2rem; }
+        .btn-del:hover { color: #dc3545; }
 
-        #loading-status { background: #fff3cd; color: #856404; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; display: none; }
+        #loading-status { background: #fff3cd; color: #856404; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; display: none; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -58,7 +59,6 @@
 </div>
 
 <script>
-    // --- CONFIGURATIE ---
     const firebaseConfig = {
       apiKey: "AIzaSyCVT75f1r5oj2oQt_p8qPhFncQ4sF1Gl4I",
       authDomain: "boodschappen-website.firebaseapp.com",
@@ -69,9 +69,7 @@
       appId: "1:524178632267:web:9ab9b7bcd72766ffc827ce"
     };
 
-    // Spreadsheet ID
     const SPREADSHEET_ID = '1e9EiFl4qvpOmyrUcmbSVX_5q2A2i1LUxJkpBvGDtZgc';
-    // https://docs.google.com/spreadsheets/d/1e9EiFl4qvpOmyrUcmbSVX_5q2A2i1LUxJkpBvGDtZgc
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -81,18 +79,19 @@
     let huidigeLijst = [];
     let selectieStatus = {};
 
-    // --- DATA LADEN ---
     async function laadData() {
         const statusDiv = document.getElementById('loading-status');
         statusDiv.style.display = 'block';
 
+        // LET OP: De namen van de sheets zijn HOOFDLETTERGEVOELIG
         const urlProducten = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Producten`;
         const urlCategorien = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Categorien`;
 
         try {
             const [resP, resC] = await Promise.all([fetch(urlProducten), fetch(urlCategorien)]);
             
-            if (!resP.ok || !resC.ok) throw new Error("Sheet niet gevonden of niet openbaar.");
+            if (!resP.ok) throw new Error("Tabblad 'Producten' niet gevonden.");
+            if (!resC.ok) throw new Error("Tabblad 'Categorien' niet gevonden.");
 
             const csvP = await resP.text();
             const csvC = await resC.text();
@@ -100,23 +99,32 @@
             tabelProducten = csvNaarObject(csvP);
             tabelCategorien = csvNaarObject(csvC);
 
-            tabelProducten.forEach(p => selectieStatus[p.product] = 0);
+            if (tabelProducten.length === 0) throw new Error("Geen producten gevonden in de Sheet.");
+
+            tabelProducten.forEach(p => {
+                if (p.product) selectieStatus[p.product] = 0;
+            });
             
             tekenVinklijst();
             statusDiv.style.display = 'none';
         } catch (e) {
-            statusDiv.innerHTML = "⚠️ Fout bij laden Sheets. Is hij 'Gepubliceerd op internet'?";
+            statusDiv.innerHTML = "⚠️ " + e.message + "<br><small>Check tabbladnamen en Delen-instellingen.</small>";
             statusDiv.style.background = "#f8d7da";
             statusDiv.style.color = "#721c24";
-            console.error(e);
         }
     }
 
     function csvNaarObject(csv) {
-        const lijnen = csv.split('\n').filter(line => line.trim() !== "");
-        const titels = lijnen[0].replace(/"/g, '').split(',').map(t => t.trim());
+        const lijnen = csv.split('\n').map(l => l.trim()).filter(l => l !== "");
+        if (lijnen.length < 2) return [];
+        
+        // Verwijder aanhalingstekens en bepaal scheidingsteken (komma of puntkomma)
+        const headerLijn = lijnen[0].replace(/"/g, '');
+        const sep = headerLijn.includes(';') ? ';' : ',';
+        const titels = headerLijn.split(sep).map(t => t.trim().toLowerCase());
+
         return lijnen.slice(1).map(lijn => {
-            const waarden = lijn.replace(/"/g, '').split(',');
+            const waarden = lijn.replace(/"/g, '').split(sep);
             let obj = {};
             titels.forEach((titel, i) => {
                 obj[titel] = waarden[i] ? waarden[i].trim() : "";
@@ -125,7 +133,6 @@
         });
     }
 
-    // --- LOGICA ---
     db.ref('boodschappen').on('value', (snapshot) => {
         const data = snapshot.val();
         huidigeLijst = data ? Object.entries(data).map(([key, val]) => ({...val, id: key})) : [];
@@ -136,6 +143,7 @@
         const container = document.getElementById('vinklijst-container');
         container.innerHTML = "";
         tabelProducten.forEach(item => {
+            if (!item.product) return;
             const div = document.createElement('div');
             div.className = 'vink-item';
             div.innerHTML = `
@@ -151,26 +159,22 @@
     }
 
     function pasAantalAan(product, delta) {
-        let huidig = selectieStatus[product] || 0;
-        let nieuw = huidig + delta;
+        let nieuw = (selectieStatus[product] || 0) + delta;
         if (nieuw < 0) nieuw = 0;
         selectieStatus[product] = nieuw;
-        document.getElementById(`qty-${product}`).innerText = nieuw;
+        const el = document.getElementById(`qty-${product}`);
+        if (el) el.innerText = nieuw;
     }
 
     async function voegGeselecteerdeToe() {
         for (const product of tabelProducten) {
-            const aantalToevoegen = selectieStatus[product.product];
-            if (aantalToevoegen > 0) {
-                const bestaandItem = huidigeLijst.find(i => i.product === product.product);
-                if (bestaandItem) {
-                    await db.ref('boodschappen/' + bestaandItem.id).update({ aantal: parseInt(bestaandItem.aantal) + aantalToevoegen });
+            const aantal = selectieStatus[product.product];
+            if (aantal > 0) {
+                const bestaand = huidigeLijst.find(i => i.product === product.product);
+                if (bestaand) {
+                    await db.ref('boodschappen/' + bestaand.id).update({ aantal: parseInt(bestaand.aantal) + aantal });
                 } else {
-                    await db.ref('boodschappen').push({
-                        product: product.product,
-                        categorie: product.categorie,
-                        aantal: aantalToevoegen
-                    });
+                    await db.ref('boodschappen').push({ product: product.product, categorie: product.categorie, aantal: aantal });
                 }
             }
             selectieStatus[product.product] = 0;
@@ -188,19 +192,22 @@
 
     function sorteerLijst() {
         huidigeLijst.sort((a, b) => {
-            const catA = tabelCategorien.find(c => c.categorie === a.categorie) || {rank: 99};
-            const catB = tabelCategorien.find(c => c.categorie === b.categorie) || {rank: 99};
+            const catA = tabelCategorien.find(c => c.categorie.toLowerCase() === a.categorie.toLowerCase()) || {rank: 99};
+            const catB = tabelCategorien.find(c => c.categorie.toLowerCase() === b.categorie.toLowerCase()) || {rank: 99};
             return parseInt(catA.rank) - parseInt(catB.rank);
         });
-        const gesorteerdObject = {};
-        huidigeLijst.forEach((item, index) => {
-            gesorteerdObject[index] = { product: item.product, categorie: item.categorie, aantal: item.aantal };
-        });
-        db.ref('boodschappen').set(gesorteerdObject);
+        const obj = {};
+        huidigeLijst.forEach((item, i) => obj[i] = { product: item.product, categorie: item.categorie, aantal: item.aantal });
+        db.ref('boodschappen').set(obj);
     }
 
     function resetLijst() {
-        if(confirm("Lijst legen voor iedereen?")) db.ref('boodschappen').remove();
+        if(confirm("Lijst legen?")) db.ref('boodschappen').remove();
+    }
+
+    // Nieuwe functie: Verwijder één item
+    function verwijderItem(id) {
+        db.ref('boodschappen/' + id).remove();
     }
 
     function tekenBoodschappenlijst() {
@@ -214,6 +221,7 @@
                     <span>${item.product}</span>
                 </div>
                 <span class="cat-badge">${item.categorie}</span>
+                <div class="btn-del" onclick="verwijderItem('${item.id}')">✕</div>
             `;
             lijstUI.appendChild(li);
         });
@@ -221,6 +229,5 @@
 
     laadData();
 </script>
-
 </body>
 </html>
