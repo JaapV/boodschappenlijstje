@@ -1,16 +1,75 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boodschappenlijst Jaap en Ilse</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #1c1e21; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        h2 { border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 1.2rem; margin-top: 25px; }
+        
+        /* Product Kiezer */
+        .vinklijst { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .vink-item { background: #f8f9fa; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .controls { display: flex; align-items: center; gap: 15px; }
+        .btn-qty { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #ddd; background: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+        .qty-val { font-weight: bold; min-width: 20px; text-align: center; }
+
+        /* Knoppen */
+        button { width: 100%; padding: 14px; margin-top: 8px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; }
+        .btn-add { background: #007bff; color: white; }
+        .btn-sort { background: #6c757d; color: white; margin-top: 20px; }
+        .btn-reset { background: #dc3545; color: white; opacity: 0.8; }
+        input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; margin-top: 10px; font-size: 1rem; }
+
+        /* Lijst weergave */
+        ul { list-style: none; padding: 0; margin-top: 15px; }
+        li { padding: 12px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; }
+        .item-info { display: flex; align-items: center; gap: 10px; }
+        .aantal-badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; }
+        .cat-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 10px; border-radius: 20px; color: #495057; font-weight: bold; }
+
+        #loading-status { background: #fff3cd; color: #856404; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="loading-status">Laden van producten...</div>
+
+    <h2>Producten kiezen</h2>
+    <div id="vinklijst-container" class="vinklijst"></div>
+    <button class="btn-add" onclick="voegGeselecteerdeToe()">Voeg toe aan lijst</button>
+
+    <hr style="margin-top: 25px; border: 0; border-top: 1px solid #eee;">
+
+    <input type="text" id="handmatig-input" placeholder="Ander product...">
+    <button class="btn-add" style="background: #28a745;" onclick="voegHandmatigToe()">Handmatig toevoegen (1st)</button>
+
+    <h2>Onze Boodschappenlijst</h2>
+    <ul id="boodschappenlijst"></ul>
+
+    <button class="btn-sort" onclick="sorteerLijst()">Sorteer op looproute</button>
+    <button class="btn-reset" onclick="resetLijst()">Lijst legen</button>
+</div>
+
 <script>
     // --- CONFIGURATIE ---
     const firebaseConfig = {
-        // ... (houd je eigen firebaseConfig hier!)
-        apiKey: "AIzaSyCVT75f1r5oj2oQt_p8qPhFncQ4sF1Gl4I",
-        authDomain: "boodschappen-website.firebaseapp.com",
-        databaseURL: "https://boodschappen-website-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "boodschappen-website",
-        storageBucket: "boodschappen-website.firebasestorage.app",
-        messagingSenderId: "524178632267",
-        appId: "1:524178632267:web:9ab9b7bcd72766ffc827ce"
+      apiKey: "AIzaSyCVT75f1r5oj2oQt_p8qPhFncQ4sF1Gl4I",
+      authDomain: "boodschappen-website.firebaseapp.com",
+      databaseURL: "https://boodschappen-website-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "boodschappen-website",
+      storageBucket: "boodschappen-website.firebasestorage.app",
+      messagingSenderId: "524178632267",
+      appId: "1:524178632267:web:9ab9b7bcd72766ffc827ce"
     };
 
+    // Spreadsheet ID
     const SPREADSHEET_ID = '2PACX-1vSccN8hUuZyA1taUz1e_FKsT7ZWwCMMhUKAGVRKYMxck2k-4z9MN9JFwZDEGvWRjDbIq19-Gglh80UV';
     // https://docs.google.com/spreadsheets/d/1e9EiFl4qvpOmyrUcmbSVX_5q2A2i1LUxJkpBvGDtZgc
 
@@ -22,42 +81,51 @@
     let huidigeLijst = [];
     let selectieStatus = {};
 
-    // --- DATA LADEN UIT GOOGLE SHEETS ---
+    // --- DATA LADEN ---
     async function laadData() {
+        const statusDiv = document.getElementById('loading-status');
+        statusDiv.style.display = 'block';
+
         const urlProducten = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Producten`;
         const urlCategorien = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Categorien`;
 
         try {
             const [resP, resC] = await Promise.all([fetch(urlProducten), fetch(urlCategorien)]);
+            
+            if (!resP.ok || !resC.ok) throw new Error("Sheet niet gevonden of niet openbaar.");
+
             const csvP = await resP.text();
             const csvC = await resC.text();
 
             tabelProducten = csvNaarObject(csvP);
             tabelCategorien = csvNaarObject(csvC);
 
-            // Initialiseer selectieStatus
             tabelProducten.forEach(p => selectieStatus[p.product] = 0);
             
             tekenVinklijst();
-            console.log("Data succesvol geladen uit Sheets!");
+            statusDiv.style.display = 'none';
         } catch (e) {
-            console.error("Fout bij laden Sheets:", e);
+            statusDiv.innerHTML = "⚠️ Fout bij laden Sheets. Is hij 'Gepubliceerd op internet'?";
+            statusDiv.style.background = "#f8d7da";
+            statusDiv.style.color = "#721c24";
+            console.error(e);
         }
     }
 
-    // Hulpfunctie om CSV tekst om te zetten naar een lijst met objecten
     function csvNaarObject(csv) {
-        const lijnen = csv.split('\n');
-        const titels = lijnen[0].replace(/"/g, '').split(',');
+        const lijnen = csv.split('\n').filter(line => line.trim() !== "");
+        const titels = lijnen[0].replace(/"/g, '').split(',').map(t => t.trim());
         return lijnen.slice(1).map(lijn => {
             const waarden = lijn.replace(/"/g, '').split(',');
             let obj = {};
-            titels.forEach((titel, i) => obj[titel.trim()] = waarden[i]?.trim());
+            titels.forEach((titel, i) => {
+                obj[titel] = waarden[i] ? waarden[i].trim() : "";
+            });
             return obj;
         });
     }
 
-    // --- DE REST VAN JE LOGICA (Firebase sync & tekenen) ---
+    // --- LOGICA ---
     db.ref('boodschappen').on('value', (snapshot) => {
         const data = snapshot.val();
         huidigeLijst = data ? Object.entries(data).map(([key, val]) => ({...val, id: key})) : [];
@@ -83,10 +151,11 @@
     }
 
     function pasAantalAan(product, delta) {
-        let nieuwAantal = (selectieStatus[product] || 0) + delta;
-        if (nieuwAantal < 0) nieuwAantal = 0;
-        selectieStatus[product] = nieuwAantal;
-        document.getElementById(`qty-${product}`).innerText = nieuwAantal;
+        let huidig = selectieStatus[product] || 0;
+        let nieuw = huidig + delta;
+        if (nieuw < 0) nieuw = 0;
+        selectieStatus[product] = nieuw;
+        document.getElementById(`qty-${product}`).innerText = nieuw;
     }
 
     async function voegGeselecteerdeToe() {
@@ -95,9 +164,9 @@
             if (aantalToevoegen > 0) {
                 const bestaandItem = huidigeLijst.find(i => i.product === product.product);
                 if (bestaandItem) {
-                    db.ref('boodschappen/' + bestaandItem.id).update({ aantal: parseInt(bestaandItem.aantal) + aantalToevoegen });
+                    await db.ref('boodschappen/' + bestaandItem.id).update({ aantal: parseInt(bestaandItem.aantal) + aantalToevoegen });
                 } else {
-                    db.ref('boodschappen').push({
+                    await db.ref('boodschappen').push({
                         product: product.product,
                         categorie: product.categorie,
                         aantal: aantalToevoegen
@@ -150,6 +219,8 @@
         });
     }
 
-    // Start: laad eerst de data uit Google Sheets
     laadData();
 </script>
+
+</body>
+</html>
