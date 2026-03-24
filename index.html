@@ -71,17 +71,14 @@
     async function laadData() {
         const statusBox = document.getElementById('status-box');
         
-        // We gebruiken de 'pub?output=csv' methode, deze is het meest betrouwbaar tegen "Failed to fetch" errors.
-        const urlP = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/pub?output=csv&sheet=Producten`;
-        const urlC = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/pub?output=csv&sheet=Categorien`;
+        // Gebruik de Google Visualization URL voor maximale compatibiliteit
+        const urlP = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Producten`;
+        const urlC = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=Categorien`;
 
         try {
-            const [resP, resC] = await Promise.all([
-                fetch(urlP, { cache: "no-store" }), 
-                fetch(urlC, { cache: "no-store" })
-            ]);
+            const [resP, resC] = await Promise.all([fetch(urlP), fetch(urlC)]);
             
-            if (!resP.ok || !resC.ok) throw new Error("Google Sheets weigert toegang.");
+            if (!resP.ok || !resC.ok) throw new Error();
 
             const textP = await resP.text();
             const textC = await resC.text();
