@@ -29,8 +29,6 @@
         .cat-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 10px; border-radius: 20px; color: #495057; font-weight: bold; }
         .no-cat-badge { font-size: 0.75rem; background: #fff3cd; padding: 4px 10px; border-radius: 20px; color: #856404; font-weight: bold; }
         #loading-msg { text-align: center; color: #888; padding: 20px; }
-        #boodschappenlijst-no-cat { display: none; }
-        #boodschappenlijst-no-cat.visible { display: block; }
     </style>
 </head>
 <body>
@@ -50,13 +48,12 @@
         <h2>Onze Boodschappenlijst</h2>
         <ul id="boodschappenlijst"></ul>
 
-        <div id="boodschappenlijst-no-cat">
-            <h3>⚠️ Producten zonder categorie</h3>
-            <ul id="boodschappenlijst-no-cat-items"></ul>
-        </div>
-
         <button class="btn-sort" onclick="sorteerLijst()">Sorteer op looproute</button>
         <button class="btn-reset" onclick="resetLijst()">Lijst legen</button>
+
+        <h2>Onbekende Producten</h2>
+        <ul id="onbekende-lijst"></ul>
+        <button class="btn-reset" onclick="leegOnbekende()">Lijst onbekende producten leegmaken</button>
     </div>
 </div>
 
@@ -78,6 +75,7 @@
     let tabelCategorien = [];
     let selectieStatus = {};
     let huidigeLijst = [];
+    let onbekendeLijst = [];
 
     // --- FUNCTIE: CSV LADEN ---
     async function laadCsvBestanden() {
@@ -122,6 +120,12 @@
         const data = snapshot.val();
         huidigeLijst = data ? Object.entries(data).map(([key, val]) => ({...val, id: key})) : [];
         tekenBoodschappenlijst();
+    });
+
+    db.ref('onbekende').on('value', (snapshot) => {
+        const data = snapshot.val();
+        onbekendeLijst = data ? Object.entries(data).map(([key, val]) => ({...val, id: key})) : [];
+        tekenOnbekendeLijst();
     });
 
     function tekenVinklijst() {
@@ -173,11 +177,11 @@
         const input = document.getElementById('handmatig-input');
         const naam = input.value.trim();
         if (!naam) return;
-        const bestaandItem = huidigeLijst.find(i => i.product.toLowerCase() === naam.toLowerCase());
+        const bestaandItem = onbekendeLijst.find(i => i.product.toLowerCase() === naam.toLowerCase());
         if (bestaandItem) {
-            db.ref('boodschappen/' + bestaandItem.id).update({ aantal: bestaandItem.aantal + 1 });
+            db.ref('onbekende/' + bestaandItem.id).update({ aantal: bestaandItem.aantal + 1 });
         } else {
-            db.ref('boodschappen').push({ product: naam, categorie: '', aantal: 1 });
+            db.ref('onbekende').push({ product: naam, aantal: 1 });
         }
         input.value = "";
     }
@@ -201,54 +205,40 @@
 
     function tekenBoodschappenlijst() {
         const lijstUI = document.getElementById('boodschappenlijst');
-        const lijstNoCatContainer = document.getElementById('boodschappenlijst-no-cat');
-        const lijstNoCatUI = document.getElementById('boodschappenlijst-no-cat-items');
-        
         lijstUI.innerHTML = "";
-        lijstNoCatUI.innerHTML = "";
-
-        // Scheid producten met en zonder categorie
-        const metCategorie = [];
-        const zonderCategorie = [];
-
         huidigeLijst.forEach(item => {
-            if (!item.categorie || item.categorie.trim() === '') {
-                zonderCategorie.push(item);
-            } else {
-                metCategorie.push(item);
-            }
-        });
-
-        // Toon producten met categorie
-        metCategorie.forEach(item => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <div class="item-info">
-                    <span class="aantal-badge">${item.aantal}x</span>
-                    <span>${item.product}</span>
-                </div>
-                <span class="cat-badge">${item.categorie}</span>
-            `;
-            lijstUI.appendChild(li);
-        });
-
-        // Toon producten zonder categorie
-        if (zonderCategorie.length > 0) {
-            lijstNoCatContainer.classList.add('visible');
-            zonderCategorie.forEach(item => {
+            if (item.categorie && item.categorie.trim()) {
                 const li = document.createElement('li');
                 li.innerHTML = `
                     <div class="item-info">
                         <span class="aantal-badge">${item.aantal}x</span>
                         <span>${item.product}</span>
                     </div>
-                    <span class="no-cat-badge">GEEN CAT</span>
+                    <span class="cat-badge">${item.categorie}</span>
                 `;
-                lijstNoCatUI.appendChild(li);
-            });
-        } else {
-            lijstNoCatContainer.classList.remove('visible');
-        }
+                lijstUI.appendChild(li);
+            }
+        });
+    }
+
+    function tekenOnbekendeLijst() {
+        const lijstUI = document.getElementById('onbekende-lijst');
+        lijstUI.innerHTML = "";
+        onbekendeLijst.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="item-info">
+                    <span class="aantal-badge">${item.aantal}x</span>
+                    <span>${item.product}</span>
+                </div>
+                <span class="no-cat-badge">ONBEKEND</span>
+            `;
+            lijstUI.appendChild(li);
+        });
+    }
+
+    function leegOnbekende() {
+        if(confirm("Onbekende producten lijst legen?")) db.ref('onbekende').remove();
     }
 
     // Start het laden van de CSV bestanden

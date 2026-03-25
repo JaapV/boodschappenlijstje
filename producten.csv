@@ -1,9 +1,57 @@
 product,categorie
 Appels,Fruit
 Bananen,Fruit
+Mandarijnen,Fruit
+Druiven,Fruit
+Aardbeien,Fruit
+Blauwe bessen,Fruit
+Mango,Fruit
+Tomatensoeppakket,Groente
+Erwtensoeppakket,Groente
+Lasagnepaket,Groente
+Champignons,Groente
+Aardappelen,Groente
+Broccoli,Groente
+Knolselderij,Groente
+Ui,Groente
+Soepgroente,Groente
+Wokgroente,Groente
+Snackworteltjes,Groente
 Brood,Bakker
-Kaas,Zuivel
+Croissants,Bakker
+Peperkoek,Bakker
+Eiersalade,Koel beleg
+Zalmsalade,Koel beleg
+Hummus,Koel beleg
+Vleesbeleg,Koel beleg
+Pate,Koel beleg
+Kaas,Koel beleg
+Philadelphia,Koel beleg
+Mozzarella,Koel beleg
+Yoghurt,Zuivel
+Skyr,Zuivel
 Melk,Zuivel
+Optimel,Zuivel
+Boter,Zuivel
+Crackers,Zoet beleg
+Chocopasta,Zoet beleg
+Hagelslag,Zoet beleg
+Pindakaas,Zoet beleg
+Jam,Zoet beleg
+Speculoos,Zoet beleg
+Eieren,Zoet beleg
+Pasta,Pasta
+Pastasaus,Pasta
+Bakolie,Pasta
+Koeken,Snacks
+Snoep,Snacks
+Koffie,Drank
+Thee,Drank
+Cassis,Drank
+Cola,Drank
+Fanta,Drank
+Ice tea green,Drank
+Ranja,Drank
 Wijn,Drank
 Bier,Drank
-Eieren,Zuivel
+Radler,Drank
