@@ -9,26 +9,29 @@
     
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #1c1e21; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .container { max-width: 540px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
         h2 { border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 1.2rem; margin-top: 25px; }
-        h3 { font-size: 1rem; margin: 15px 0 10px 0; color: #dc3545; }
-        .vinklijst { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-        .vink-item { background: #f8f9fa; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .controls { display: flex; align-items: center; gap: 15px; }
-        .btn-qty { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #ddd; background: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .qty-val { font-weight: bold; min-width: 20px; text-align: center; }
-        button { width: 100%; padding: 14px; margin-top: 8px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; }
+        h3 { font-size: 1rem; margin: 12px 0 8px 0; color: #333; }
+        #vinklijst-container { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px; margin-bottom: 15px; }
+        .vinkgroep { background: #fff; border: 1px solid #e7e7ea; border-radius: 12px; padding: 8px; }
+        .vinkgroep h3 { font-size: 0.85rem; margin: 6px 0; color: #495057; }
+        .vink-item { background: #f8f9fa; padding: 8px; border-radius: 10px; display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; }
+        .controls { display:flex; align-items:center; gap:8px; }
+        .btn-qty { width: 30px; height: 30px; border-radius: 50%; border:1px solid #ddd; background:white; font-size: 1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+        .qty-val { width: 24px; text-align:center; font-weight:bold; }
+        button { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; }
         .btn-add { background: #007bff; color: white; }
         .btn-sort { background: #6c757d; color: white; margin-top: 20px; }
-        .btn-reset { background: #dc3545; color: white; opacity: 0.8; }
-        input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; margin-top: 10px; font-size: 1rem; }
-        ul { list-style: none; padding: 0; margin-top: 15px; }
-        li { padding: 12px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; }
-        .item-info { display: flex; align-items: center; gap: 10px; }
-        .aantal-badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; }
-        .cat-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 10px; border-radius: 20px; color: #495057; font-weight: bold; }
-        .no-cat-badge { font-size: 0.75rem; background: #fff3cd; padding: 4px 10px; border-radius: 20px; color: #856404; font-weight: bold; }
-        #loading-msg { text-align: center; color: #888; padding: 20px; }
+        .btn-reset { background: #dc3545; color: white; opacity: 0.88; }
+        .item-actions button { width: 34px; height: 34px; border-radius: 50%; border:1px solid #ddd; background:white; cursor:pointer; }
+        input[type="text"] { width: 100%; padding: 14px; border:1px solid #ddd; border-radius:12px; box-sizing:border-box; margin-top:10px; font-size:1rem; }
+        ul { list-style:none; padding:0; margin-top:15px; }
+        li { padding: 10px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; }
+        .item-info { display:flex; align-items:center; gap:8px; }
+        .aantal-badge { background: #007bff; color:white; padding:2px 8px; border-radius:8px; font-size: 0.9rem; font-weight:bold; }
+        .cat-badge { font-size: 0.75rem; background:#e9ecef; padding:4px 10px; border-radius:20px; color:#495057; font-weight:bold; }
+        .no-cat-badge { font-size: 0.75rem; background:#fff3cd; padding:4px 10px; border-radius:20px; color:#856404; font-weight:bold; }
+        #loading-msg { text-align:center; color:#888; padding:20px; }
     </style>
 </head>
 <body>
@@ -37,19 +40,21 @@
     <div id="loading-msg">Lijsten laden van GitHub...</div>
     <div id="app-content" style="display:none;">
         <h2>Producten kiezen</h2>
-        <div id="vinklijst-container" class="vinklijst"></div>
+        <div id="vinklijst-container"></div>
         <button class="btn-add" onclick="voegGeselecteerdeToe()">Voeg toe aan lijst</button>
 
-        <hr style="margin-top: 25px; border: 0; border-top: 1px solid #eee;">
+        <hr style="margin-top:25px; border:0; border-top:1px solid #eee;">
 
-        <input type="text" id="handmatig-input" placeholder="Ander product...">
-        <button class="btn-add" style="background: #28a745;" onclick="voegHandmatigToe()">Handmatig toevoegen (1st)</button>
+        <input type="text" id="handmatig-input" placeholder="Ander product (bijv. Champignons)...">
+        <button class="btn-add" style="background:#28a745;" onclick="voegHandmatigToe()">Handmatig toevoegen (1st)</button>
 
         <h2>Onze Boodschappenlijst</h2>
         <ul id="boodschappenlijst"></ul>
 
-        <button class="btn-sort" onclick="sorteerLijst()">Sorteer op looproute</button>
-        <button class="btn-reset" onclick="resetLijst()">Lijst legen</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-sort" style="flex:1;" onclick="sorteerLijst()">Sorteer op looproute</button>
+            <button class="btn-reset" style="flex:1;" onclick="resetLijst()">Lijst legen</button>
+        </div>
 
         <h2>Onbekende Producten</h2>
         <ul id="onbekende-lijst"></ul>
@@ -77,27 +82,16 @@
     let huidigeLijst = [];
     let onbekendeLijst = [];
 
-    // --- FUNCTIE: CSV LADEN ---
     async function laadCsvBestanden() {
         try {
-            const [resP, resC] = await Promise.all([
-                fetch('./producten.csv'),
-                fetch('./categorien.csv')
-            ]);
-            
+            const [resP, resC] = await Promise.all([ fetch('./producten.csv'), fetch('./categorien.csv') ]);
             const textP = await resP.text();
             const textC = await resC.text();
-
             tabelProducten = parseCsv(textP);
             tabelCategorien = parseCsv(textC);
-
-            // Initialiseer selectie
             tabelProducten.forEach(p => selectieStatus[p.product] = 0);
-
-            // Toon de app
             document.getElementById('loading-msg').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
-            
             tekenVinklijst();
         } catch (error) {
             document.getElementById('loading-msg').innerText = "Fout bij laden CSV: " + error.message;
@@ -109,121 +103,172 @@
         const headers = lines[0].split(',').map(h => h.trim());
         return lines.slice(1).map(line => {
             const values = line.split(',').map(v => v.trim());
-            let obj = {};
-            headers.forEach((h, i) => obj[h] = values[i]);
+            const obj = {};
+            headers.forEach((h,i) => obj[h] = values[i] || '');
             return obj;
         });
     }
 
-    // --- FIREBASE SYNC ---
     db.ref('boodschappen').on('value', (snapshot) => {
         const data = snapshot.val();
-        huidigeLijst = data ? Object.entries(data).map(([key, val]) => ({...val, id: key})) : [];
+        huidigeLijst = data ? Object.entries(data).map(([id, val]) => ({...val, id})) : [];
         tekenBoodschappenlijst();
     });
-
     db.ref('onbekende').on('value', (snapshot) => {
         const data = snapshot.val();
-        onbekendeLijst = data ? Object.entries(data).map(([key, val]) => ({...val, id: key})) : [];
+        onbekendeLijst = data ? Object.entries(data).map(([id, val]) => ({...val, id})) : [];
         tekenOnbekendeLijst();
     });
 
     function tekenVinklijst() {
         const container = document.getElementById('vinklijst-container');
         container.innerHTML = "";
+        const groep = {};
         tabelProducten.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'vink-item';
-            div.innerHTML = `
-                <span>${item.product}</span>
-                <div class="controls">
-                    <div class="btn-qty" onclick="pasAantalAan('${item.product}', -1)">-</div>
-                    <span class="qty-val" id="qty-${item.product}">${selectieStatus[item.product]}</span>
-                    <div class="btn-qty" onclick="pasAantalAan('${item.product}', 1)">+</div>
-                </div>
-            `;
-            container.appendChild(div);
+            const cat = item.categorie && item.categorie.trim() ? item.categorie : 'Onbekend';
+            if (!groep[cat]) groep[cat] = [];
+            groep[cat].push(item);
+        });
+
+        const lijstCategorieen = [...tabelCategorien.map(c => c.categorie), 'Onbekend'];
+        lijstCategorieen.forEach(cat => {
+            if (!groep[cat] || groep[cat].length === 0) return;
+            const groepDiv = document.createElement('div');
+            groepDiv.className = 'vinkgroep';
+            groepDiv.innerHTML = `<h3>${cat}</h3>`;
+            groep[cat].forEach(item => {
+                const rij = document.createElement('div');
+                rij.className = 'vink-item';
+                const qty = selectieStatus[item.product] || 0;
+                rij.innerHTML = `
+                    <span>${item.product}</span>
+                    <div class="controls">
+                        <button class="btn-qty" onclick="pasAantalAan('${item.product}', -1)">-</button>
+                        <span class="qty-val" id="qty-${item.product}">${qty}</span>
+                        <button class="btn-qty" onclick="pasAantalAan('${item.product}', 1)">+</button>
+                    </div>
+                `;
+                groepDiv.appendChild(rij);
+            });
+            container.appendChild(groepDiv);
         });
     }
 
     function pasAantalAan(product, delta) {
-        let nieuwAantal = (selectieStatus[product] || 0) + delta;
-        if (nieuwAantal < 0) nieuwAantal = 0;
-        selectieStatus[product] = nieuwAantal;
-        document.getElementById(`qty-${product}`).innerText = nieuwAantal;
+        const huidig = selectieStatus[product] || 0;
+        const nieuw = Math.max(0, huidig + delta);
+        selectieStatus[product] = nieuw;
+        const el = document.getElementById(`qty-${product}`);
+        if (el) el.innerText = nieuw;
     }
 
     async function voegGeselecteerdeToe() {
-        for (const product of tabelProducten) {
-            const aantalToevoegen = selectieStatus[product.product];
+        for (const item of tabelProducten) {
+            const aantalToevoegen = selectieStatus[item.product] || 0;
             if (aantalToevoegen > 0) {
-                const bestaandItem = huidigeLijst.find(i => i.product === product.product);
-                if (bestaandItem) {
-                    await db.ref('boodschappen/' + bestaandItem.id).update({ aantal: bestaandItem.aantal + aantalToevoegen });
+                const bestaand = huidigeLijst.find(i => i.product === item.product);
+                if (bestaand) {
+                    await db.ref(`boodschappen/${bestaand.id}`).update({ aantal: bestaand.aantal + aantalToevoegen });
                 } else {
                     await db.ref('boodschappen').push({
-                        product: product.product,
-                        categorie: product.categorie,
+                        product: item.product,
+                        categorie: item.categorie || '',
                         aantal: aantalToevoegen
                     });
                 }
+                if (!item.categorie || item.categorie.trim() === '') {
+                    await _voegOfUpdateOnbekende(item.product, aantalToevoegen);
+                }
             }
-            selectieStatus[product.product] = 0;
+            selectieStatus[item.product] = 0;
         }
         tekenVinklijst();
     }
 
-    function voegHandmatigToe() {
+    async function voegHandmatigToe() {
         const input = document.getElementById('handmatig-input');
-        const naam = input.value.trim();
-        if (!naam) return;
-        const bestaandItem = onbekendeLijst.find(i => i.product.toLowerCase() === naam.toLowerCase());
-        if (bestaandItem) {
-            db.ref('onbekende/' + bestaandItem.id).update({ aantal: bestaandItem.aantal + 1 });
+        const raw = input.value.trim();
+        if (!raw) return;
+        const naam = raw.replace(/\s+/g, ' ');
+        const rekening = naam.toLowerCase();
+        const catalogus = tabelProducten.find(p => p.product.toLowerCase() === rekening);
+        const product = catalogus ? catalogus.product : naam;
+        const categorie = catalogus ? catalogus.categorie : '';
+        const bestaandeBoodschap = huidigeLijst.find(i => i.product.toLowerCase() === rekening);
+        if (bestaandeBoodschap) {
+            await db.ref(`boodschappen/${bestaandeBoodschap.id}`).update({ aantal: bestaandeBoodschap.aantal + 1 });
         } else {
-            db.ref('onbekende').push({ product: naam, aantal: 1 });
+            await db.ref('boodschappen').push({ product, categorie, aantal: 1 });
+        }
+        if (!categorie || categorie.trim() === '') {
+            await _voegOfUpdateOnbekende(product, 1);
         }
         input.value = "";
     }
 
+    async function _voegOfUpdateOnbekende(product, aantal) {
+        const bestaand = onbekendeLijst.find(i => i.product.toLowerCase() === product.toLowerCase());
+        if (bestaand) {
+            await db.ref(`onbekende/${bestaand.id}`).update({ aantal: bestaand.aantal + aantal });
+        } else {
+            await db.ref('onbekende').push({ product, aantal });
+        }
+    }
+
     function sorteerLijst() {
-        huidigeLijst.sort((a, b) => {
-            const rankA = parseInt((tabelCategorien.find(c => c.categorie === a.categorie) || {rank: 99}).rank);
-            const rankB = parseInt((tabelCategorien.find(c => c.categorie === b.categorie) || {rank: 99}).rank);
-            return rankA - rankB;
+        huidigeLijst.sort((a,b) => {
+            const rankA = parseInt((tabelCategorien.find(c => c.categorie === a.categorie) || {rank:'99'}).rank, 10);
+            const rankB = parseInt((tabelCategorien.find(c => c.categorie === b.categorie) || {rank:'99'}).rank, 10);
+            if (rankA !== rankB) return rankA - rankB;
+            return a.product.localeCompare(b.product);
         });
-        const gesorteerdObject = {};
+        const gesorteerd = {};
         huidigeLijst.forEach((item, index) => {
-            gesorteerdObject[index] = { product: item.product, categorie: item.categorie, aantal: item.aantal };
+            gesorteerd[index] = { product: item.product, categorie: item.categorie || '', aantal: item.aantal };
         });
-        db.ref('boodschappen').set(gesorteerdObject);
+        db.ref('boodschappen').set(gesorteerd);
     }
 
     function resetLijst() {
-        if(confirm("Lijst legen voor iedereen?")) db.ref('boodschappen').remove();
+        if (confirm("Lijst legen voor iedereen?")) {
+            db.ref('boodschappen').remove();
+        }
+    }
+
+    function pasAantalBoodschappenAan(id, delta) {
+        const item = huidigeLijst.find(i => i.id === id);
+        if (!item) return;
+        const nieuw = item.aantal + delta;
+        if (nieuw <= 0) {
+            db.ref(`boodschappen/${id}`).remove();
+        } else {
+            db.ref(`boodschappen/${id}`).update({ aantal: nieuw });
+        }
     }
 
     function tekenBoodschappenlijst() {
-        const lijstUI = document.getElementById('boodschappenlijst');
-        lijstUI.innerHTML = "";
+        const lijst = document.getElementById('boodschappenlijst');
+        lijst.innerHTML = "";
         huidigeLijst.forEach(item => {
-            if (item.categorie && item.categorie.trim()) {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <div class="item-info">
-                        <span class="aantal-badge">${item.aantal}x</span>
-                        <span>${item.product}</span>
-                    </div>
-                    <span class="cat-badge">${item.categorie}</span>
-                `;
-                lijstUI.appendChild(li);
-            }
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="item-info">
+                    <span class="aantal-badge">${item.aantal}x</span>
+                    <span>${item.product}</span>
+                    ${item.categorie && item.categorie.trim() ? `<span class="cat-badge">${item.categorie}</span>` : `<span class="no-cat-badge">ONBEKEND</span>`}
+                </div>
+                <div class="item-actions">
+                    <button title="minder" onclick="pasAantalBoodschappenAan('${item.id}', -1)">-</button>
+                    <button title="meer" onclick="pasAantalBoodschappenAan('${item.id}', +1)">+</button>
+                </div>
+            `;
+            lijst.appendChild(li);
         });
     }
 
     function tekenOnbekendeLijst() {
-        const lijstUI = document.getElementById('onbekende-lijst');
-        lijstUI.innerHTML = "";
+        const lijst = document.getElementById('onbekende-lijst');
+        lijst.innerHTML = "";
         onbekendeLijst.forEach(item => {
             const li = document.createElement('li');
             li.innerHTML = `
@@ -233,15 +278,16 @@
                 </div>
                 <span class="no-cat-badge">ONBEKEND</span>
             `;
-            lijstUI.appendChild(li);
+            lijst.appendChild(li);
         });
     }
 
     function leegOnbekende() {
-        if(confirm("Onbekende producten lijst legen?")) db.ref('onbekende').remove();
+        if (confirm("Onbekende producten lijst legen?")) {
+            db.ref('onbekende').remove();
+        }
     }
 
-    // Start het laden van de CSV bestanden
     laadCsvBestanden();
 </script>
 
