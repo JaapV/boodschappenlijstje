@@ -11,6 +11,7 @@
         body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #1c1e21; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
         h2 { border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 1.2rem; margin-top: 25px; }
+        h3 { font-size: 1rem; margin: 15px 0 10px 0; color: #dc3545; }
         .vinklijst { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
         .vink-item { background: #f8f9fa; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
         .controls { display: flex; align-items: center; gap: 15px; }
@@ -26,7 +27,10 @@
         .item-info { display: flex; align-items: center; gap: 10px; }
         .aantal-badge { background: #007bff; color: white; padding: 2px 8px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; }
         .cat-badge { font-size: 0.75rem; background: #e9ecef; padding: 4px 10px; border-radius: 20px; color: #495057; font-weight: bold; }
+        .no-cat-badge { font-size: 0.75rem; background: #fff3cd; padding: 4px 10px; border-radius: 20px; color: #856404; font-weight: bold; }
         #loading-msg { text-align: center; color: #888; padding: 20px; }
+        #boodschappenlijst-no-cat { display: none; }
+        #boodschappenlijst-no-cat.visible { display: block; }
     </style>
 </head>
 <body>
@@ -45,6 +49,11 @@
 
         <h2>Onze Boodschappenlijst</h2>
         <ul id="boodschappenlijst"></ul>
+
+        <div id="boodschappenlijst-no-cat">
+            <h3>⚠️ Producten zonder categorie</h3>
+            <ul id="boodschappenlijst-no-cat-items"></ul>
+        </div>
 
         <button class="btn-sort" onclick="sorteerLijst()">Sorteer op looproute</button>
         <button class="btn-reset" onclick="resetLijst()">Lijst legen</button>
@@ -168,7 +177,7 @@
         if (bestaandItem) {
             db.ref('boodschappen/' + bestaandItem.id).update({ aantal: bestaandItem.aantal + 1 });
         } else {
-            db.ref('boodschappen').push({ product: naam, categorie: 'Overig', aantal: 1 });
+            db.ref('boodschappen').push({ product: naam, categorie: '', aantal: 1 });
         }
         input.value = "";
     }
@@ -192,8 +201,26 @@
 
     function tekenBoodschappenlijst() {
         const lijstUI = document.getElementById('boodschappenlijst');
+        const lijstNoCatContainer = document.getElementById('boodschappenlijst-no-cat');
+        const lijstNoCatUI = document.getElementById('boodschappenlijst-no-cat-items');
+        
         lijstUI.innerHTML = "";
+        lijstNoCatUI.innerHTML = "";
+
+        // Scheid producten met en zonder categorie
+        const metCategorie = [];
+        const zonderCategorie = [];
+
         huidigeLijst.forEach(item => {
+            if (!item.categorie || item.categorie.trim() === '') {
+                zonderCategorie.push(item);
+            } else {
+                metCategorie.push(item);
+            }
+        });
+
+        // Toon producten met categorie
+        metCategorie.forEach(item => {
             const li = document.createElement('li');
             li.innerHTML = `
                 <div class="item-info">
@@ -204,6 +231,24 @@
             `;
             lijstUI.appendChild(li);
         });
+
+        // Toon producten zonder categorie
+        if (zonderCategorie.length > 0) {
+            lijstNoCatContainer.classList.add('visible');
+            zonderCategorie.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="item-info">
+                        <span class="aantal-badge">${item.aantal}x</span>
+                        <span>${item.product}</span>
+                    </div>
+                    <span class="no-cat-badge">GEEN CAT</span>
+                `;
+                lijstNoCatUI.appendChild(li);
+            });
+        } else {
+            lijstNoCatContainer.classList.remove('visible');
+        }
     }
 
     // Start het laden van de CSV bestanden
