@@ -8,30 +8,121 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #1c1e21; }
-        .container { max-width: 540px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        /* Basis reset om horizontale scroll te voorkomen */
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: -apple-system, system-ui, sans-serif; 
+            background: #f0f2f5; 
+            margin: 0; 
+            padding: 10px; /* Iets minder padding op mobiel */
+            color: #1c1e21; 
+            width: 100%;
+            overflow-x: hidden; /* Harde stop op horizontaal scrollen */
+        }
+
+        .container { 
+            width: 100%;
+            max-width: 540px; 
+            margin: auto; 
+            background: white; 
+            padding: 15px; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
+        }
+
         h2 { border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; font-size: 1.2rem; margin-top: 25px; }
         h3 { font-size: 1rem; margin: 12px 0 8px 0; color: #333; }
-        #vinklijst-container { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px; margin-bottom: 15px; }
+
+        /* De Grid: Standaard 1 kolom voor mobiel, 2 voor grotere schermen */
+        #vinklijst-container { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+
+        @media (min-width: 480px) {
+            #vinklijst-container { grid-template-columns: repeat(2, 1fr); }
+        }
+
         .vinkgroep { background: #fff; border: 1px solid #e7e7ea; border-radius: 12px; padding: 8px; }
-        .vinkgroep h3 { font-size: 0.85rem; margin: 6px 0; color: #495057; }
-        .vink-item { background: #f8f9fa; padding: 8px; border-radius: 10px; display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; }
-        .controls { display:flex; align-items:center; gap:8px; }
-        .btn-qty { width: 30px; height: 30px; border-radius: 50%; border:1px solid #ddd; background:white; font-size: 1rem; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-        .qty-val { width: 24px; text-align:center; font-weight:bold; }
+        .vinkgroep h3 { font-size: 0.85rem; margin: 6px 0; color: #495057; overflow: hidden; text-overflow: ellipsis; }
+
+        .vink-item { 
+            background: #f8f9fa; 
+            padding: 8px; 
+            border-radius: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 6px; 
+            gap: 5px;
+        }
+
+        /* Productnaam mag knoppen niet wegdrukken */
+        .vink-item span { 
+            font-size: 0.9rem; 
+            word-break: break-word; 
+            flex: 1; 
+        }
+
+        .controls { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        
+        .btn-qty { 
+            width: 28px; 
+            height: 28px; 
+            border-radius: 50%; 
+            border: 1px solid #ddd; 
+            background: white; 
+            font-size: 1rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            padding: 0;
+        }
+
+        .qty-val { width: 22px; text-align: center; font-weight: bold; font-size: 0.9rem; }
+
         button { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; }
         .btn-add { background: #007bff; color: white; }
         .btn-sort { background: #6c757d; color: white; margin-top: 20px; }
         .btn-reset { background: #dc3545; color: white; opacity: 0.88; }
-        .item-actions button { width: 34px; height: 34px; border-radius: 50%; border:1px solid #ddd; background:white; cursor:pointer; }
-        input[type="text"] { width: 100%; padding: 14px; border:1px solid #ddd; border-radius:12px; box-sizing:border-box; margin-top:10px; font-size:1rem; }
-        ul { list-style:none; padding:0; margin-top:15px; }
-        li { padding: 10px; border-bottom: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; }
-        .item-info { display:flex; align-items:center; gap:8px; }
-        .aantal-badge { background: #007bff; color:white; padding:2px 8px; border-radius:8px; font-size: 0.9rem; font-weight:bold; }
-        .cat-badge { font-size: 0.75rem; background:#e9ecef; padding:4px 10px; border-radius:20px; color:#495057; font-weight:bold; }
-        .no-cat-badge { font-size: 0.75rem; background:#fff3cd; padding:4px 10px; border-radius:20px; color:#856404; font-weight:bold; }
-        #loading-msg { text-align:center; color:#888; padding:20px; }
+
+        .item-actions { display: flex; gap: 5px; flex-shrink: 0; }
+        .item-actions button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #ddd; background: white; cursor: pointer; padding: 0; margin: 0; }
+
+        input[type="text"] { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; margin-top: 10px; font-size: 1rem; }
+
+        ul { list-style: none; padding: 0; margin-top: 15px; }
+        li { 
+            padding: 10px 0; 
+            border-bottom: 1px solid #f0f2f5; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 10px;
+        }
+
+        .item-info { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            flex: 1; 
+            min-width: 0; /* Zorgt dat tekst mag afbreken binnen flex */
+            flex-wrap: wrap; 
+        }
+
+        .item-info span { word-break: break-word; font-size: 0.95rem; }
+
+        .aantal-badge { background: #007bff; color: white; padding: 2px 6px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; }
+        .cat-badge, .no-cat-badge { font-size: 0.65rem; padding: 3px 8px; border-radius: 20px; font-weight: bold; white-space: nowrap; }
+        
+        .cat-badge { background: #e9ecef; color: #495057; }
+        .no-cat-badge { background: #fff3cd; color: #856404; }
+
+        #loading-msg { text-align: center; color: #888; padding: 20px; }
     </style>
 </head>
 <body>
@@ -58,11 +149,12 @@
 
         <h2>Onbekende Producten</h2>
         <ul id="onbekende-lijst"></ul>
-        <button class="btn-reset" onclick="leegOnbekende()">Lijst onbekende producten leegmaken</button>
+        <button class="btn-reset" onclick="leegOnbekende()">Lijst onbekende leegmaken</button>
     </div>
 </div>
 
 <script>
+    // JS is ongewijzigd gebleven voor de functionaliteit
     const firebaseConfig = {
       apiKey: "AIzaSyCVT75f1r5oj2oQt_p8qPhFncQ4sF1Gl4I",
       authDomain: "boodschappen-website.firebaseapp.com",
