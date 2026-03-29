@@ -6,6 +6,7 @@ Druiven,Fruit
 Aardbeien,Fruit
 Blauwe bessen,Fruit
 Mango,Fruit
+Peren,Fruit
 Tomatensoeppakket,Groente
 Erwtensoeppakket,Groente
 Lasagnepaket,Groente
@@ -14,12 +15,21 @@ Aardappelen,Groente
 Broccoli,Groente
 Knolselderij,Groente
 Ui,Groente
+Paprika,Groente
+Prei,Groente
+Aubergine,Groente
 Soepgroente,Groente
 Wokgroente,Groente
 Snackworteltjes,Groente
 Brood,Bakker
 Croissants,Bakker
 Peperkoek,Bakker
+Kippendij,Vlees
+Gehakt,Vlees
+Verse worst,Vlees
+Chipolata,Vlees
+Witvis,Vlees
+Zalmfilet,Vlees
 Eiersalade,Koel beleg
 Zalmsalade,Koel beleg
 Hummus,Koel beleg
@@ -40,11 +50,12 @@ Pindakaas,Zoet beleg
 Jam,Zoet beleg
 Speculoos,Zoet beleg
 Eieren,Zoet beleg
-Pasta,Pasta
-Pastasaus,Pasta
-Bakolie,Pasta
+Pasta,Koken
+Pastasaus,Koken
+Bakolie,Koken
 Koeken,Snacks
 Snoep,Snacks
+Chips,Snacks
 Koffie,Drank
 Thee,Drank
 Cassis,Drank
