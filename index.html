@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Slimme Boodschappenlijst</title>
+    <title>Boodschappenlijst Jaap en Ilse</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
@@ -45,7 +45,7 @@
         <button class="btn-add" onclick="productToevoegen()">Voeg toe</button>
     </div>
 
-    <h2>Onze Boodschappenlijst</h2>
+    <h2>Onze boodschappenlijst</h2>
     <ul id="boodschappenlijst"></ul>
 
     <button class="btn-reset" onclick="resetLijst()">Lijst legen voor iedereen</button>
@@ -71,7 +71,7 @@
     let tabelCategorien = [];
     let huidigeLijst = [];
 
-    // 1. Laad alleen de categorieën van GitHub
+    // 1. Laad de categorieën van GitHub
     async function laadCategorien() {
         try {
             const res = await fetch('./categorien.csv');
