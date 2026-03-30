@@ -88,8 +88,8 @@
         const prompt = `Categoriseer "${productNaam}" in één van deze groepen: ${categorieNamen}. Antwoord alleen met de naam van de groep. Niks anders.`;
 
         try {
-            // TERUG NAAR v1beta (de stabiele poort voor dit model)
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AI_API_KEY}`;
+            // GEFIXTE NAAM: gemini-1.5-flash-latest werkt vaak beter bij 'not found' errors
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${AI_API_KEY}`;
             
             const response = await fetch(url, {
                 method: 'POST',
