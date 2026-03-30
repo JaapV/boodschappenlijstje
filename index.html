@@ -88,8 +88,8 @@
         const prompt = `Categoriseer "${productNaam}" in één van deze groepen: ${categorieNamen}. Antwoord alleen met de naam van de groep. Niks anders.`;
 
         try {
-            // GEFIXTE NAAM: gemini-1.5-flash-latest werkt vaak beter bij 'not found' errors
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${AI_API_KEY}`;
+            // FIX: Gebruik v1 (stabiel) en gemini-2.0-flash (standaard 2026)
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${AI_API_KEY}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -175,7 +175,6 @@
 
     function toggleVinkje(id, s) { db.ref(`boodschappen/${id}`).update({ vinkje: !s }); }
     function resetLijst() { if (confirm("Hele lijst wissen?")) db.ref('boodschappen').remove(); }
-    
     function showError(msg) {
         const log = document.getElementById('error-log');
         log.innerHTML = `<b>Foutmelding:</b> ${msg}`;
