@@ -133,4 +133,54 @@
     db.ref('boodschappen').on('value', (snapshot) => {
         const data = snapshot.val();
         huidigeLijst = data ? Object.entries(data).map(([id, val]) => ({...val, id})) : [];
-        huidigeLijst.sort((a,b
+        huidigeLijst.sort((a,b) => {
+            const catA = tabelCategorien.find(c => c.categorie.toLowerCase() === a.categorie.toLowerCase());
+            const catB = tabelCategorien.find(c => c.categorie.toLowerCase() === b.categorie.toLowerCase());
+            const rankA = catA ? parseInt(catA.rank) : 99;
+            const rankB = catB ? parseInt(catB.rank) : 99;
+            return rankA !== rankB ? rankA - rankB : a.product.localeCompare(b.product);
+        });
+        tekenBoodschappenlijst();
+    });
+
+    function tekenBoodschappenlijst() {
+        const lijst = document.getElementById('boodschappenlijst');
+        lijst.innerHTML = "";
+        huidigeLijst.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="item-info" onclick="toggleVinkje('${item.id}', ${item.vinkje})">
+                    <span class="aantal-badge">${item.aantal}x</span>
+                    <span>${item.product}</span>
+                    ${item.vinkje ? '<span class="vinkje-icon">✓</span>' : ''}
+                    <span class="cat-badge">${item.categorie}</span>
+                </div>
+                <div class="item-actions">
+                    <button onclick="pasAantal('${item.id}', -1)">-</button>
+                    <button onclick="pasAantal('${item.id}', +1)">+</button>
+                </div>
+            `;
+            lijst.appendChild(li);
+        });
+    }
+
+    function pasAantal(id, d) {
+        const item = huidigeLijst.find(i => i.id === id);
+        const nieuw = item.aantal + d;
+        if (nieuw <= 0) db.ref(`boodschappen/${id}`).remove();
+        else db.ref(`boodschappen/${id}`).update({ aantal: nieuw });
+    }
+
+    function toggleVinkje(id, s) { db.ref(`boodschappen/${id}`).update({ vinkje: !s }); }
+    function resetLijst() { if (confirm("Hele lijst wissen?")) db.ref('boodschappen').remove(); }
+    
+    function showError(msg) {
+        const log = document.getElementById('error-log');
+        log.innerHTML = `<b>Foutmelding:</b> ${msg}`;
+        log.style.display = 'block';
+    }
+
+    laadCategorien();
+</script>
+</body>
+</html>
