@@ -25,7 +25,7 @@
         .item-actions button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #ddd; background: white; cursor: pointer; padding: 0; }
         .btn-reset { width: 100%; padding: 12px; margin-top: 20px; border: none; border-radius: 12px; background: #dc3545; color: white; font-weight: bold; opacity: 0.8; }
         #loading-overlay { display: none; text-align: center; font-size: 0.8rem; color: #007bff; margin-top: 8px; font-style: italic; }
-        #error-log { display: none; background: #ffe3e3; color: #b71c1c; padding: 10px; border-radius: 10px; font-size: 0.75rem; margin-top: 10px; border: 1px solid #ffcdd2; }
+        #error-log { display: none; background: #ffe3e3; color: #b71c1c; padding: 10px; border-radius: 10px; font-size: 0.75rem; margin-top: 10px; border: 1px solid #ffcdd2; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -54,7 +54,6 @@
       appId: "1:524178632267:web:9ab9b7bcd72766ffc827ce"
     };
 
-    // Jouw nieuwe Gemini API Key
     const AI_API_KEY = "AIzaSyCtkKlYncy13gCtAS9KH9Ic6HyqszAB_HA".trim(); 
 
     firebase.initializeApp(firebaseConfig);
@@ -86,11 +85,11 @@
     async function bepaalCategorieMetAI(productNaam) {
         if (tabelCategorien.length === 0) return "Overig";
         const categorieNamen = tabelCategorien.map(c => c.categorie).join(', ');
-        const prompt = `Categoriseer het product "${productNaam}" in één van deze groepen: ${categorieNamen}. Antwoord alleen met de exacte naam van de groep. Als het niet in de lijst staat, antwoord dan: Overig.`;
+        const prompt = `Categoriseer "${productNaam}" in één van deze groepen: ${categorieNamen}. Antwoord alleen met de naam van de groep. Niks anders.`;
 
         try {
-            // GEFIXTE URL: Gebruik v1 in plaats van v1beta
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${AI_API_KEY}`;
+            // TERUG NAAR v1beta (de stabiele poort voor dit model)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AI_API_KEY}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -100,7 +99,10 @@
             
             const data = await response.json();
             
-            if (data.error) throw new Error(data.error.message);
+            if (data.error) {
+                console.error("AI Response Error:", data);
+                throw new Error(data.error.message);
+            }
             
             let result = data.candidates[0].content.parts[0].text.trim().replace(/[^\w\s]/gi, '');
             return result;
